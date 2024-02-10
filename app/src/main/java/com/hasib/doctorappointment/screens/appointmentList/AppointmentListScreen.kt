@@ -1,24 +1,24 @@
-@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class,
+@file:OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class,
     ExperimentalMaterial3Api::class
 )
 
-package com.hasib.doctorappointment.ui.appointmentList
+package com.hasib.doctorappointment.screens.appointmentList
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -29,11 +29,10 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ChipColors
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -43,6 +42,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -57,18 +57,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hasib.doctorappointment.R
-import com.hasib.doctorappointment.data.AppData
 import com.hasib.doctorappointment.model.Appointment
 import com.hasib.doctorappointment.model.SlotStatus
 import com.hasib.doctorappointment.ui.theme.DoctorAppointmentTheme
+import com.hasib.doctorappointment.utils.Resources
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AppointmentListScreen(
     viewModel: AppointmentListViewModel = hiltViewModel()
 ) {
+    val appointmentsState = viewModel.appointmentListState
     val searchString: String by viewModel.searchString.observeAsState(initial = "")
-    val appointmentList: List<Appointment> by viewModel.appointmentList.observeAsState(initial = emptyList())
+
+    LaunchedEffect(key1 = Unit) {
+        viewModel.loadAppointments()
+    }
 
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -96,7 +100,26 @@ fun AppointmentListScreen(
                     onQueryChange = { }
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                AppointmentList(appointmentList = appointmentList)
+                when (appointmentsState.appointments) {
+                    is Resources.Loading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .wrapContentSize(align = Alignment.Center)
+                        )
+                    }
+
+                    is Resources.Error -> {
+                        Text(
+                            text = appointmentsState.appointments.throwable?.localizedMessage
+                                ?: "Error"
+                        )
+                    }
+
+                    is Resources.Success -> {
+                        AppointmentList(appointmentList = appointmentsState.appointments.data!!)
+                    }
+                }
             }
         }
     }

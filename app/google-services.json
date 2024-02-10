@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "457297423430",
+    "project_id": "doctorappointment-cee9a",
+    "storage_bucket": "doctorappointment-cee9a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457297423430:android:4adc78803683489b49ee47",
+        "android_client_info": {
+          "package_name": "com.hasib.doctorappointment"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "457297423430-k1tj5pcl0ubbbo2vnt6ui5p3htfmfuvh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hasib.doctorappointment",
+            "certificate_hash": "fabc9a9a9f1657e3cff73680372bc1053f80c0eb"
+          }
+        },
+        {
+          "client_id": "457297423430-al3s1s2inn5n9ral5kj7d3qkb3bocj0j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPQi7puekmCnVSBgRDLk6gBA9LITd1xzA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "457297423430-al3s1s2inn5n9ral5kj7d3qkb3bocj0j.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
