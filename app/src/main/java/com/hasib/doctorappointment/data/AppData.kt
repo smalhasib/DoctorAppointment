@@ -19,8 +19,4 @@ object AppData {
         Appointment("Doctor C", "4:00 AM", SlotStatus.AVAILABLE, 8, 2),
         Appointment("Doctor C", "7:00 AM", SlotStatus.AVAILABLE, 6, 1),
     )
-
-    object Routes {
-        const val APPOINTMENT_LIST_SCREEN = "appointment_list_screen"
-    }
 }
