@@ -5,18 +5,10 @@ import androidx.annotation.Keep
 data class Appointment(
     val doctorName: String,
     val time: String,
-    val status: SlotStatus,
+    val isDoctorAvailable: Boolean,
     val total: Int,
     val available: Int
 ) {
     @Keep
-    constructor() : this("", "", SlotStatus.AVAILABLE, 0, 0)
-}
-
-enum class SlotStatus {
-    AVAILABLE,
-    BOOKED,
-    FillED_UP,
-    FINISHED,
-    NOT_AVAILABLE
+    constructor() : this("", "", true, 0, 0)
 }

@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
 import com.hasib.doctorappointment.screens.appointmentList.AppointmentListScreen
+import com.hasib.doctorappointment.screens.appointmentList.AppointmentListViewModel
 import com.hasib.doctorappointment.screens.sign_in.SignInScreen
 import com.hasib.doctorappointment.screens.sign_in.SignInViewModel
 import com.hasib.doctorappointment.services.GoogleAuthClient
@@ -147,7 +148,20 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                     ) {
-                        AppointmentListScreen()
+                        val viewModel: AppointmentListViewModel = hiltViewModel()
+
+                        AppointmentListScreen(
+                            uiState = viewModel.uiState,
+                            loadAppointments = { query, status ->
+                                viewModel.loadAppointments(query, status)
+                            },
+                            bookAppointment = { appointmentId ->
+                                viewModel.bookAppointment(appointmentId)
+                            },
+                            resetViewModel = {
+                                viewModel.resetState()
+                            }
+                        )
                     }
                 }
             }

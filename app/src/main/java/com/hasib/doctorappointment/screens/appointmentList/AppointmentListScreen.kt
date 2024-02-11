@@ -1,11 +1,11 @@
 @file:OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3Api::class
+    ExperimentalMaterial3Api::class, ExperimentalMaterial3Api::class
 )
 
 package com.hasib.doctorappointment.screens.appointmentList
 
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,18 +20,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -43,35 +47,51 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.hasib.doctorappointment.R
-import com.hasib.doctorappointment.model.Appointment
+import com.hasib.doctorappointment.model.AppointmentItem
 import com.hasib.doctorappointment.model.SlotStatus
+import com.hasib.doctorappointment.model.chipColor
 import com.hasib.doctorappointment.ui.theme.DoctorAppointmentTheme
 import com.hasib.doctorappointment.utils.Resources
+import com.hasib.doctorappointment.utils.toFormattedString
+import java.time.LocalTime
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun AppointmentListScreen(
-    viewModel: AppointmentListViewModel = hiltViewModel()
+    uiState: AppointmentListState,
+    loadAppointments: (query: String, status: String) -> Unit,
+    bookAppointment: (appointmentId: String) -> Unit,
+    resetViewModel: () -> Unit
 ) {
-    val appointmentsState = viewModel.appointmentListState
-    val searchString: String by viewModel.searchString.observeAsState(initial = "")
+    val context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.loadAppointments()
+        loadAppointments("", SlotStatus.AVAILABLE.name)
+    }
+
+    LaunchedEffect(key1 = uiState.bookingStatus) {
+        if (uiState.bookingStatus) {
+            Toast.makeText(
+                context,
+                "Appointment Booked Successfully",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        resetViewModel()
     }
 
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
@@ -91,16 +111,13 @@ fun AppointmentListScreen(
                 )
             }
         ) {
-            Column(modifier = Modifier.padding(it)) {
-                SearchBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    searchString = searchString,
-                    onQueryChange = { }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                when (appointmentsState.appointments) {
+            Column(
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .padding(it)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                when (uiState.appointments) {
                     is Resources.Loading -> {
                         CircularProgressIndicator(
                             modifier = Modifier
@@ -111,13 +128,18 @@ fun AppointmentListScreen(
 
                     is Resources.Error -> {
                         Text(
-                            text = appointmentsState.appointments.throwable?.localizedMessage
+                            text = uiState.appointments.throwable?.localizedMessage
                                 ?: "Error"
                         )
                     }
 
                     is Resources.Success -> {
-                        AppointmentList(appointmentList = appointmentsState.appointments.data!!)
+                        AppointmentList(
+                            searchString = uiState.query,
+                            appointmentItems = uiState.appointments.data!!,
+                            loadAppointments = loadAppointments,
+                            bookAppointment = bookAppointment
+                        )
                     }
                 }
             }
@@ -133,49 +155,85 @@ fun SearchBar(
 ) {
     Box(modifier = modifier) {
         TextField(
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Search Doctor"
+                )
+            },
             value = searchString,
             onValueChange = {
                 onQueryChange(it)
             },
+            textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurfaceVariant),
             label = { Text("Search Doctor") },
             singleLine = true,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                disabledContainerColor = MaterialTheme.colorScheme.surface,
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 disabledIndicatorColor = Color.Transparent,
             ),
-            textStyle = TextStyle(color = Color.Black),
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(5.dp, CircleShape)
-                .background(Color.White, CircleShape)
-                .padding(horizontal = 20.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
         )
     }
 }
 
 @Composable
-fun AppointmentList(appointmentList: List<Appointment>) {
-    LazyColumn(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
-        items(appointmentList) { appointment ->
-            AppointmentItem(appointment = appointment)
+fun AppointmentList(
+    searchString: String,
+    appointmentItems: List<AppointmentItem>,
+    loadAppointments: (query: String, status: String) -> Unit,
+    bookAppointment: (appointmentId: String) -> Unit
+) {
+    val selectedFilter = remember {
+        mutableStateOf(SlotStatus.AVAILABLE.name)
+    }
+
+    SearchBar(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        searchString = searchString
+    ) {
+        loadAppointments(it, selectedFilter.value)
+    }
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        val filters: List<String> = listOf("ALL").plus(SlotStatus.entries.map { it.name })
+        items(filters) { status ->
+            FilterChip(
+                selected = status == selectedFilter.value,
+                onClick = {
+                    selectedFilter.value = status
+                    loadAppointments(searchString, status)
+                },
+                label = { Text(text = status.replace('_', ' ')) }
+            )
+        }
+    }
+    Divider(color = Color.Gray, thickness = 1.dp, modifier = Modifier.padding(bottom = 4.dp))
+    LazyColumn {
+        items(appointmentItems) { appointment ->
+            AppointmentItem(
+                appointment = appointment,
+                bookAppointment = bookAppointment
+            )
         }
     }
 }
 
 @Composable
-fun AppointmentItem(appointment: Appointment) {
-    val chipColor = when (appointment.status) {
-        SlotStatus.AVAILABLE -> Color(0xFFD4EDBD)
-        SlotStatus.BOOKED -> Color(0xFF5B3286)
-        SlotStatus.FillED_UP -> Color(0xFFB10202)
-        SlotStatus.FINISHED -> Color(0xFFFBB1B1)
-        SlotStatus.NOT_AVAILABLE -> Color(0xFFE6E6E6)
-    }
-
+fun AppointmentItem(
+    appointment: AppointmentItem,
+    bookAppointment: (appointmentId: String) -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -187,7 +245,6 @@ fun AppointmentItem(appointment: Appointment) {
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-//            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(all = 16.dp)
@@ -217,17 +274,17 @@ fun AppointmentItem(appointment: Appointment) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = appointment.time,
+                            text = appointment.time.toFormattedString(),
                             fontSize = 20.sp
                         )
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 AssistChip(
-                    onClick = { /*TODO*/ },
-                    label = { Text(text = appointment.status.name) },
+                    onClick = { },
+                    label = { Text(text = appointment.status.name.replace('_', ' ')) },
                     colors = AssistChipDefaults.assistChipColors(
-                        containerColor = chipColor,
+                        containerColor = appointment.status.chipColor(),
                         labelColor = when (appointment.status) {
                             SlotStatus.BOOKED, SlotStatus.FillED_UP -> Color.White
                             else -> Color.Black
@@ -240,12 +297,17 @@ fun AppointmentItem(appointment: Appointment) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "3/4",
+                    text = "${appointment.available}/${appointment.total}",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(modifier = Modifier.height(32.dp))
-                ElevatedButton(onClick = { /*TODO*/ }) {
+                ElevatedButton(
+                    enabled = appointment.status == SlotStatus.AVAILABLE,
+                    onClick = {
+                        bookAppointment(appointment.id)
+                    }
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.outline_calendar_add_on_24),
                         contentDescription = "Book Appointment"
@@ -260,6 +322,24 @@ fun AppointmentItem(appointment: Appointment) {
 @Composable
 fun AppointmentListScreenPreview() {
     DoctorAppointmentTheme {
-        AppointmentListScreen()
+        AppointmentListScreen(
+            uiState = AppointmentListState(
+                appointments = Resources.Success(
+                    data = listOf(
+                        AppointmentItem(
+                            id = "1",
+                            doctorName = "Dr. John Doe",
+                            time = LocalTime.of(10, 0),
+                            status = SlotStatus.AVAILABLE,
+                            total = 10,
+                            available = 5
+                        )
+                    )
+                )
+            ),
+            loadAppointments = { _, _ -> },
+            bookAppointment = { },
+            resetViewModel = { }
+        )
     }
 }

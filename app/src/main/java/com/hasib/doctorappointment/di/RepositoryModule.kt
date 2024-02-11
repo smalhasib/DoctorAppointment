@@ -1,5 +1,6 @@
 package com.hasib.doctorappointment.di
 
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.hasib.doctorappointment.data.repos.AppointmentRepository
 import dagger.Module
@@ -14,5 +15,8 @@ object RepositoryModule {
 
     @Singleton
     @Provides
-    fun provideAppointmentRepository(firestore: FirebaseFirestore) = AppointmentRepository(firestore)
+    fun provideAppointmentRepository(
+        firestore: FirebaseFirestore,
+        currentUser: FirebaseUser?
+    ) = AppointmentRepository(firestore, currentUser)
 }
