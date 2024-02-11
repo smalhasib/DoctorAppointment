@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
@@ -37,6 +38,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -75,7 +77,8 @@ fun AppointmentListScreen(
     uiState: AppointmentListState,
     loadAppointments: (query: String, status: String) -> Unit,
     bookAppointment: (appointmentId: String) -> Unit,
-    resetViewModel: () -> Unit
+    resetViewModel: () -> Unit,
+    onSignOut: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -107,7 +110,16 @@ fun AppointmentListScreen(
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    ),
+                    actions = {
+                        IconButton(onClick = onSignOut) {
+                            Icon(
+                                imageVector = Icons.Default.Logout,
+                                contentDescription = "Logout",
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
                 )
             }
         ) {
@@ -339,7 +351,8 @@ fun AppointmentListScreenPreview() {
             ),
             loadAppointments = { _, _ -> },
             bookAppointment = { },
-            resetViewModel = { }
+            resetViewModel = { },
+            onSignOut = { }
         )
     }
 }

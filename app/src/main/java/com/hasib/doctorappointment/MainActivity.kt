@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
                         },
                         popEnterTransition = {
                             return@composable slideIntoContainer(
-                                AnimatedContentTransitionScope.SlideDirection.End, tween(700)
+                                AnimatedContentTransitionScope.SlideDirection.Start, tween(700)
                             )
                         },
                         popExitTransition = {
@@ -137,9 +137,14 @@ class MainActivity : ComponentActivity() {
                                 AnimatedContentTransitionScope.SlideDirection.Start, tween(700)
                             )
                         },
+                        exitTransition = {
+                            return@composable slideOutOfContainer(
+                                AnimatedContentTransitionScope.SlideDirection.End, tween(700)
+                            )
+                        },
                         popEnterTransition = {
                             return@composable slideIntoContainer(
-                                AnimatedContentTransitionScope.SlideDirection.End, tween(700)
+                                AnimatedContentTransitionScope.SlideDirection.Start, tween(700)
                             )
                         },
                         popExitTransition = {
@@ -160,6 +165,22 @@ class MainActivity : ComponentActivity() {
                             },
                             resetViewModel = {
                                 viewModel.resetState()
+                            },
+                            onSignOut = {
+                                lifecycleScope.launch {
+                                    googleAuthClient.signOut()
+                                    Toast.makeText(
+                                        applicationContext,
+                                        "Signed out",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                    navController.navigate(Screen.SignInScreen.route) {
+                                        popUpTo(Screen.AppointmentListScreen.route) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
                             }
                         )
                     }
